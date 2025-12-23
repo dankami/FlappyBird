@@ -1,55 +1,33 @@
 // MusicUtil.ts
-// 音乐播放工具
 export class MusicUtil {
-    private static instance: MusicUtil;
-    private audioContext: AudioContext | null = null;
+    private static flyAudio: HTMLAudioElement | null = null;
+    private static crashAudio: HTMLAudioElement | null = null;
+    private static scoreAudio: HTMLAudioElement | null = null;
 
-    private constructor() {
-        // 单例模式
-    }
-
-    public static getInstance(): MusicUtil {
-        if (!MusicUtil.instance) {
-            MusicUtil.instance = new MusicUtil();
+    // 播放飞行动作音效
+    public static playFly(): void {
+        if (!this.flyAudio) {
+            this.flyAudio = new Audio('resources/wav/fly.wav');
         }
-        return MusicUtil.instance;
+        this.flyAudio.currentTime = 0;
+        this.flyAudio.play().catch((err) => console.error('播放飞行动作音效失败:', err));
     }
 
-    // 初始化音频上下文
-    public initAudioContext(): void {
-        if (!this.audioContext) {
-            this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // 播放碰撞音效
+    public static playCrash(): void {
+        if (!this.crashAudio) {
+            this.crashAudio = new Audio('resources/wav/crash.wav');
         }
+        this.crashAudio.currentTime = 0;
+        this.crashAudio.play().catch((err) => console.error('播放碰撞音效失败:', err));
     }
 
-    // 播放音效
-    public playSound(soundUrl: string): void {
-        // 在实际项目中，这里应该使用 Cocos Creator 的音频系统
-        console.log('Playing sound:', soundUrl);
-
-        // 示例：使用 HTML5 Audio API
-        const audio = new Audio(soundUrl);
-        audio.play().catch((error) => {
-            console.error('Error playing sound:', error);
-        });
-    }
-
-    // 播放背景音乐
-    public playBackgroundMusic(musicUrl: string): void {
-        // 在实际项目中，这里应该使用 Cocos Creator 的音频系统
-        console.log('Playing background music:', musicUrl);
-
-        // 示例：使用 HTML5 Audio API
-        const audio = new Audio(musicUrl);
-        audio.loop = true;
-        audio.play().catch((error) => {
-            console.error('Error playing background music:', error);
-        });
-    }
-
-    // 停止所有音频
-    public stopAllSounds(): void {
-        // 在实际项目中，这里应该停止所有正在播放的音频
-        console.log('Stopping all sounds');
+    // 播放得分音效
+    public static playScore(): void {
+        if (!this.scoreAudio) {
+            this.scoreAudio = new Audio('resources/wav/score.wav');
+        }
+        this.scoreAudio.currentTime = 0;
+        this.scoreAudio.play().catch((err) => console.error('播放得分音效失败:', err));
     }
 }

@@ -1,46 +1,270 @@
-// Pipe.ts
-import { _decorator, Component, Node, Vec3 } from 'cc';
+import { _decorator, Component, Sprite, SpriteFrame, Node, Vec3, Rect, Graphics } from 'cc';
+import { Constant } from '../util/Constant';
+import { GameUtil } from '../util/GameUtil';
+import { Bird } from './Bird';
 const { ccclass, property } = _decorator;
 
 @ccclass('Pipe')
 export class Pipe extends Component {
-    @property
-    public moveSpeed: number = 100;
+    private imgs: SpriteFrame[] = [];
 
-    @property
-    public gapHeight: number = 150;
+    public TYPE_TOP_NORMAL: number = 0;
+    public TYPE_TOP_HARD: number = 1;
+    public TYPE_BOTTOM_NORMAL: number = 2;
+    public TYPE_BOTTOM_HARD: number = 3;
+    public TYPE_HOVER_NORMAL: number = 4;
+    public TYPE_HOVER_HARD: number = 5;
 
-    @property
-    public topOffset: number = 0;
+    public PIPE_WIDTH: number;
+    public PIPE_HEIGHT: number;
+    public PIPE_HEAD_WIDTH: number;
+    public PIPE_HEAD_HEIGHT: number;
 
-    private topPipe: Node = null!;
-    private bottomPipe: Node = null!;
+    x: number = 0;
+    y: number = 0;
+    width: number = 0;
+    height: number = 0;
 
-    start() {
-        this.topPipe = this.node.children[0]; // 假设第一个子节点是上管道
-        this.bottomPipe = this.node.children[1]; // 假设第二个子节点是下管道
+    visible: boolean = false;
+    type: number = 0;
+    speed: number = 0;
+    pipeRect: Rect = new Rect();
 
-        // 设置管道间隙
-        const gapY = this.gapHeight / 2;
-        this.topPipe.setPosition(new Vec3(0, gapY + this.topOffset, 0));
-        this.bottomPipe.setPosition(new Vec3(0, -gapY + this.topOffset, 0));
+    // Cocos Creator相关属性
+    private pipeBodyNode: Node | null = null; // 水管身体节点
+    private pipeHeadNode: Node | null = null; // 水管头节点
+    private pipeBodySprite: Sprite | null = null; // 水管身体精灵组件
+    private pipeHeadSprite: Sprite | null = null; // 水管头精灵组件
+
+    async initImgs() {
+        if (this.imgs.length === 0) {
+            const PIPE_IMAGE_COUNT = 3;
+            for (let i = 0; i < PIPE_IMAGE_COUNT; i++) {
+                const img = await GameUtil.loadBufferedImage(Constant.PIPE_IMG_PATH[i]);
+                if (img) {
+                    this.imgs.push(img);
+                }
+            }
+
+            // 设置静态属性
+            if (this.imgs[0]) {
+                this.PIPE_WIDTH = this.imgs[0].width;
+                this.PIPE_HEIGHT = this.imgs[0].height;
+                this.PIPE_HEAD_WIDTH = this.imgs[1].width;
+                this.PIPE_HEAD_HEIGHT = this.imgs[1].height;
+            }
+        }
     }
 
-    update(deltaTime: number) {
-        // 管道移动逻辑由主游戏控制
+    constructor() {
+        super();
+        this.speed = Constant.GAME_SPEED;
+        this.width = this.PIPE_WIDTH;
+        this.pipeRect.width = this.PIPE_WIDTH;
     }
 
-    getBounds(): { x: number; y: number; width: number; height: number } {
-        const position = this.node.position;
-        const scale = this.node.scale;
-        const width = 60 * scale.x; // 假设管道宽度为60
-        const height = 800 * scale.y; // 假设管道总高度为800
+    setAttribute(x: number, y: number, height: number, type: number, visible: boolean) {
+        this.x = x;
+        this.y = y;
+        this.height = height;
+        this.type = type;
+        this.visible = visible;
+        this.setRectangle(this.x, this.y, this.height);
+        this.updatePipeNode(); // 更新节点位置和大小
+    }
 
-        return {
-            x: position.x - width / 2,
-            y: position.y - height / 2,
-            width: width,
-            height: height,
-        };
+    setRectangle(x: number, y: number, height: number) {
+        this.pipeRect.x = x;
+        this.pipeRect.y = y;
+        this.pipeRect.height = height;
+    }
+
+    isVisible(): boolean {
+        return this.visible;
+    }
+
+    // 在Cocos Creator中，draw方法应替换为节点操作
+    draw(g: Graphics, bird: Bird) {
+        // 这个方法在Cocos Creator中不再需要，因为使用节点系统
+        // 保留此方法是为了兼容现有代码，实际绘制由节点系统处理
+        if (bird.isDead()) {
+            return;
+        }
+        this.movement();
+    }
+
+    // 更新节点位置和大小
+    private updatePipeNode() {
+        // 确保节点已创建
+        if (!this.pipeBodyNode) {
+            this.createPipeNodes();
+        }
+
+        // 根据水管类型设置节点位置和大小
+        switch (this.type) {
+            case this.TYPE_TOP_NORMAL:
+                this.setupTopNormalPipe();
+                break;
+            case this.TYPE_BOTTOM_NORMAL:
+                this.setupBottomNormalPipe();
+                break;
+            case this.TYPE_HOVER_NORMAL:
+                this.setupHoverNormalPipe();
+                break;
+        }
+
+        // 更新碰撞矩形
+        this.updateCollisionRect();
+    }
+
+    // 创建水管节点
+    private createPipeNodes() {
+        // 创建水管身体节点
+        this.pipeBodyNode = new Node('PipeBody');
+        this.pipeBodyNode.parent = this.node;
+        this.pipeBodySprite = this.pipeBodyNode.addComponent(Sprite);
+        this.pipeBodySprite.spriteFrame = this.imgs[0];
+
+        // 创建水管头节点
+        this.pipeHeadNode = new Node('PipeHead');
+        this.pipeHeadNode.parent = this.node;
+        this.pipeHeadSprite = this.pipeHeadNode.addComponent(Sprite);
+    }
+
+    // 设置上部普通水管
+    private setupTopNormalPipe() {
+        if (
+            !this.pipeBodyNode ||
+            !this.pipeHeadNode ||
+            !this.pipeBodySprite ||
+            !this.pipeHeadSprite
+        )
+            return;
+
+        // 设置水管身体
+        const bodyCount = Math.floor((this.height - this.PIPE_HEAD_HEIGHT) / this.PIPE_HEIGHT) + 1;
+        this.pipeBodyNode.setPosition(new Vec3(this.x, this.y, 0));
+        this.pipeBodyNode.setScale(new Vec3(1, bodyCount, 1)); // 垂直拉伸以匹配高度
+        this.pipeBodySprite.spriteFrame = this.imgs[0];
+
+        // 设置水管头
+        this.pipeHeadNode.setPosition(
+            new Vec3(
+                this.x - Math.floor((this.PIPE_HEAD_WIDTH - this.width) / 2),
+                this.height - Constant.TOP_PIPE_LENGTHENING - this.PIPE_HEAD_HEIGHT,
+                0
+            )
+        );
+        this.pipeHeadSprite.spriteFrame = this.imgs[1];
+    }
+
+    // 设置下部普通水管
+    private setupBottomNormalPipe() {
+        if (
+            !this.pipeBodyNode ||
+            !this.pipeHeadNode ||
+            !this.pipeBodySprite ||
+            !this.pipeHeadSprite
+        )
+            return;
+
+        // 设置水管身体
+        const bodyCount =
+            Math.floor(
+                (this.height - this.PIPE_HEAD_HEIGHT - Constant.GROUND_HEIGHT) / this.PIPE_HEIGHT
+            ) + 1;
+        this.pipeBodyNode.setPosition(
+            new Vec3(this.x, Constant.FRAME_HEIGHT - this.PIPE_HEIGHT - Constant.GROUND_HEIGHT, 0)
+        );
+        this.pipeBodyNode.setScale(new Vec3(1, bodyCount, 1));
+        this.pipeBodySprite.spriteFrame = this.imgs[0];
+
+        // 设置水管头
+        this.pipeHeadNode.setPosition(
+            new Vec3(
+                this.x - Math.floor((this.PIPE_HEAD_WIDTH - this.width) / 2),
+                Constant.FRAME_HEIGHT - this.height,
+                0
+            )
+        );
+        this.pipeHeadSprite.spriteFrame = this.imgs[2];
+    }
+
+    // 设置悬浮普通水管
+    private setupHoverNormalPipe() {
+        if (
+            !this.pipeBodyNode ||
+            !this.pipeHeadNode ||
+            !this.pipeBodySprite ||
+            !this.pipeHeadSprite
+        )
+            return;
+
+        // 设置水管身体
+        const bodyCount =
+            Math.floor((this.height - 2 * this.PIPE_HEAD_HEIGHT) / this.PIPE_HEIGHT) + 1;
+        this.pipeBodyNode.setPosition(new Vec3(this.x, this.y + this.PIPE_HEAD_HEIGHT, 0));
+        this.pipeBodyNode.setScale(new Vec3(1, bodyCount, 1));
+        this.pipeBodySprite.spriteFrame = this.imgs[0];
+
+        // 设置上部水管头
+        let topHeadNode = this.node.getChildByName('TopPipeHead');
+        if (!topHeadNode) {
+            topHeadNode = new Node('TopPipeHead');
+            topHeadNode.parent = this.node;
+            const topHeadSprite = topHeadNode.addComponent(Sprite);
+            topHeadSprite.spriteFrame = this.imgs[2];
+        }
+
+        topHeadNode.setPosition(
+            new Vec3(this.x - Math.floor((this.PIPE_HEAD_WIDTH - this.width) / 2), this.y, 0)
+        );
+
+        // 设置下部水管头
+        let bottomHeadNode = this.node.getChildByName('BottomPipeHead');
+        if (!bottomHeadNode) {
+            bottomHeadNode = new Node('BottomPipeHead');
+            bottomHeadNode.parent = this.node;
+            const bottomHeadSprite = bottomHeadNode.addComponent(Sprite);
+            bottomHeadSprite.spriteFrame = this.imgs[1];
+        }
+
+        const bottomY = this.y + this.height - this.PIPE_HEAD_HEIGHT;
+        bottomHeadNode.setPosition(
+            new Vec3(this.x - Math.floor((this.PIPE_HEAD_WIDTH - this.width) / 2), bottomY, 0)
+        );
+    }
+
+    // 更新碰撞矩形
+    private updateCollisionRect() {
+        this.pipeRect.x = this.x;
+        this.pipeRect.y = this.y;
+        this.pipeRect.width = this.width;
+        this.pipeRect.height = this.height;
+    }
+
+    private movement() {
+        this.x -= this.speed;
+        this.pipeRect.x -= this.speed;
+        if (this.x < -1 * this.PIPE_HEAD_WIDTH) {
+            this.visible = false;
+        }
+
+        // 更新节点位置
+        if (this.node) {
+            this.node.setPosition(new Vec3(this.x, this.y, 0));
+        }
+    }
+
+    isInFrame(): boolean {
+        return this.x + this.width < Constant.FRAME_WIDTH;
+    }
+
+    getX(): number {
+        return this.x;
+    }
+
+    getPipeRect(): Rect {
+        return this.pipeRect;
     }
 }

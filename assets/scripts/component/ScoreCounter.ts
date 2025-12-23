@@ -1,58 +1,57 @@
-// ScoreCounter.ts
-import { _decorator, Component, Node, Label } from 'cc';
+import { _decorator, Component } from 'cc';
+import { Constant } from '../util/Constant';
+import { MusicUtil } from '../util/MusicUtil';
+import { Bird } from './Bird';
 const { ccclass, property } = _decorator;
 
 @ccclass('ScoreCounter')
 export class ScoreCounter extends Component {
-    @property({ type: Label })
-    public scoreLabel: Label = null!;
+    private static instance: ScoreCounter | null = null;
+    private score: number = 0;
+    private bestScore: number = -1;
 
-    @property({ type: Label })
-    public highScoreLabel: Label = null!;
-
-    private currentScore: number = 0;
-    private highScore: number = 0;
-
-    start() {
-        this.loadHighScore();
+    public static getInstance(): ScoreCounter {
+        if (!ScoreCounter.instance) {
+            ScoreCounter.instance = new ScoreCounter();
+            ScoreCounter.instance.init();
+        }
+        return ScoreCounter.instance;
     }
 
-    addScore() {
-        this.currentScore++;
-        this.updateDisplay();
+    private init() {
+        this.bestScore = -1;
+        this.loadBestScore();
+    }
 
-        // 更新最高分
-        if (this.currentScore > this.highScore) {
-            this.highScore = this.currentScore;
-            this.saveHighScore();
+    private loadBestScore() {
+        // 在Cocos Creator中，我们可以使用本地存储来保存分数
+        const savedBestScore = localStorage.getItem(Constant.SCORE_FILE_PATH);
+        if (savedBestScore !== null) {
+            this.bestScore = parseInt(savedBestScore, 10);
         }
     }
 
-    resetScore() {
-        this.currentScore = 0;
-        this.updateDisplay();
+    public saveScore() {
+        this.bestScore = Math.max(this.bestScore, this.getCurrentScore());
+        localStorage.setItem(Constant.SCORE_FILE_PATH, this.bestScore.toString());
     }
 
-    updateDisplay() {
-        if (this.scoreLabel) {
-            this.scoreLabel.string = this.currentScore.toString();
-        }
-
-        if (this.highScoreLabel) {
-            this.highScoreLabel.string = this.highScore.toString();
+    public score(bird: Bird) {
+        if (!bird.isDead()) {
+            MusicUtil.playScore();
+            this.score += 1;
         }
     }
 
-    loadHighScore() {
-        // 从本地存储加载最高分
-        const savedHighScore = localStorage.getItem('flappybird_high_score');
-        if (savedHighScore) {
-            this.highScore = parseInt(savedHighScore);
-        }
+    public getBestScore(): number {
+        return this.bestScore;
     }
 
-    saveHighScore() {
-        // 保存最高分到本地存储
-        localStorage.setItem('flappybird_high_score', this.highScore.toString());
+    public getCurrentScore(): number {
+        return this.score;
+    }
+
+    public reset() {
+        this.score = 0;
     }
 }

@@ -1,55 +1,233 @@
-// GameElementLayer.ts
-import { _decorator, Component, Node, Prefab, instantiate } from 'cc';
+import { _decorator, Component, Graphics, Rect } from 'cc';
+import { Constant } from '../util/Constant';
+import { GameUtil } from '../util/GameUtil';
+import { Pipe } from './Pipe';
+import { Bird } from './Bird';
+import { MovingPipe } from './MovingPipe';
+import { PipePool } from './PipePool';
+import { ScoreCounter } from './ScoreCounter';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameElementLayer')
 export class GameElementLayer extends Component {
-    @property({ type: Prefab })
-    public cloudPrefab: Prefab = null!;
+    private pipes: Pipe[] = [];
 
-    @property({ type: Prefab })
-    public pipePrefab: Prefab = null!;
+    public static readonly VERTICAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 5);
+    public static readonly HORIZONTAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 4);
+    public static readonly MIN_HEIGHT: number = Math.floor(Constant.FRAME_HEIGHT / 8);
+    public static readonly MAX_HEIGHT: number = Math.floor((Constant.FRAME_HEIGHT / 8) * 5);
 
-    @property({ type: Prefab })
-    public birdPrefab: Prefab = null!;
-
-    private clouds: Node[] = [];
-    private pipes: Node[] = [];
-
-    start() {
-        this.initElements();
+    constructor() {
+        super();
     }
 
-    initElements() {
-        // 初始化云朵
-        for (let i = 0; i < 3; i++) {
-            const cloud = instantiate(this.cloudPrefab);
-            cloud.setPosition(new Vec3(400 + i * 300, Math.random() * 100 - 50, 0));
-            this.node.addChild(cloud);
-            this.clouds.push(cloud);
+    draw(g: Graphics, bird: Bird) {
+        for (let i = 0; i < this.pipes.length; i++) {
+            const pipe = this.pipes[i];
+            if (pipe.isVisible()) {
+                pipe.draw(g, bird);
+            } else {
+                const remove = this.pipes.splice(i, 1)[0];
+                PipePool.giveBack(remove);
+                i--;
+            }
         }
-
-        // 初始化管道
-        // 管道会在游戏运行时动态生成
+        this.isCollideBird(bird);
+        this.pipeBornLogic(bird);
     }
 
-    addPipe(pipe: Node) {
-        this.pipes.push(pipe);
-        this.node.addChild(pipe);
-    }
+    private pipeBornLogic(bird: Bird) {
+        if (bird.isDead()) {
+            return;
+        }
+        
+        if (this.pipes.length === 0) {
+            const topHeight = GameUtil.getRandomNumber(GameElementLayer.MIN_HEIGHT, GameElementLayer.MAX_HEIGHT + 1);
 
-    removePipe(pipe: Node) {
-        const index = this.pipes.indexOf(pipe);
-        if (index !== -1) {
-            this.pipes.splice(index, 1);
-            pipe.destroy();
+            const top = PipePool.get("Pipe");
+            top.setAttribute(
+                Constant.FRAME_WIDTH,
+                -Constant.TOP_PIPE_LENGTHENING,
+                topHeight + Constant.TOP_PIPE_LENGTHENING,
+                Pipe.TYPE_TOP_NORMAL,
+                true
+            );
+
+            const bottom = PipePool.get("Pipe");
+            bottom.setAttribute(
+                Constant.FRAME_WIDTH,
+                topHeight + GameElementLayer.VERTICAL_INTERVAL,
+                Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+                Pipe.TYPE_BOTTOM_NORMAL,
+                true
+            );
+
+            this.pipes.push(top);
+            this.pipes.push(bottom);
+        } else {
+            const lastPipe = this.pipes[this.pipes.length - 1];
+            const currentDistance = lastPipe.getX() - bird.getBirdX() + Bird.BIRD_WIDTH / 2;
+            const SCORE_DISTANCE = Pipe.PIPE_WIDTH * 2 + GameElementLayer.HORIZONTAL_INTERVAL;
+            
+            if (lastPipe.isInFrame()) {
+                if (this.pipes.length >= PipePool.FULL_PIPE - 2
+                    && currentDistance <= SCORE_DISTANCE + Math.floor(Pipe.PIPE_WIDTH * 3 / 2)) {
+                    ScoreCounter.getInstance().score(bird);
+                }
+                
+                try {
+                    const currentScore = Math.floor(ScoreCounter.getInstance().getCurrentScore()) + 1;
+                    if (GameUtil.isInProbability(currentScore, 20)) {
+                        if (GameUtil.isInProbability(1, 4)) {
+                            this.addMovingHoverPipe(lastPipe);
+                        } else {
+                            this.addMovingNormalPipe(lastPipe);
+                        }
+                    } else {
+                        if (GameUtil.isInProbability(1, 2)) {
+                            this.addNormalPipe(lastPipe);
+                        } else {
+                            this.addHoverPipe(lastPipe);
+                        }
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }
         }
     }
 
-    clearAll() {
-        this.clouds.forEach((cloud) => cloud.destroy());
-        this.pipes.forEach((pipe) => pipe.destroy());
-        this.clouds = [];
+    private addNormalPipe(lastPipe: Pipe) {
+        const topHeight = GameUtil.getRandomNumber(GameElementLayer.MIN_HEIGHT, GameElementLayer.MAX_HEIGHT + 1);
+        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+
+        const top = PipePool.get("Pipe");
+        top.setAttribute(
+            x,
+            -Constant.TOP_PIPE_LENGTHENING,
+            topHeight + Constant.TOP_PIPE_LENGTHENING,
+            Pipe.TYPE_TOP_NORMAL,
+            true
+        );
+
+        const bottom = PipePool.get("Pipe");
+        bottom.setAttribute(
+            x,
+            topHeight + GameElementLayer.VERTICAL_INTERVAL,
+            Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+            Pipe.TYPE_BOTTOM_NORMAL,
+            true
+        );
+
+        this.pipes.push(top);
+        this.pipes.push(bottom);
+    }
+
+    private addHoverPipe(lastPipe: Pipe) {
+        const topHoverHeight = GameUtil.getRandomNumber(
+            Math.floor(Constant.FRAME_HEIGHT / 6),
+            Math.floor(Constant.FRAME_HEIGHT / 4)
+        );
+        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const y = GameUtil.getRandomNumber(
+            Math.floor(Constant.FRAME_HEIGHT / 12),
+            Math.floor(Constant.FRAME_HEIGHT / 6)
+        );
+
+        const type = Pipe.TYPE_HOVER_NORMAL;
+
+        const topHover = PipePool.get("Pipe");
+        topHover.setAttribute(x, y, topHoverHeight, type, true);
+
+        const bottomHoverHeight = Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - GameElementLayer.VERTICAL_INTERVAL;
+        const bottomHover = PipePool.get("Pipe");
+        bottomHover.setAttribute(
+            x,
+            y + topHoverHeight + GameElementLayer.VERTICAL_INTERVAL,
+            bottomHoverHeight,
+            type,
+            true
+        );
+
+        this.pipes.push(topHover);
+        this.pipes.push(bottomHover);
+    }
+
+    private addMovingHoverPipe(lastPipe: Pipe) {
+        const topHoverHeight = GameUtil.getRandomNumber(
+            Math.floor(Constant.FRAME_HEIGHT / 6),
+            Math.floor(Constant.FRAME_HEIGHT / 4)
+        );
+        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const y = GameUtil.getRandomNumber(
+            Math.floor(Constant.FRAME_HEIGHT / 12),
+            Math.floor(Constant.FRAME_HEIGHT / 6)
+        );
+
+        const type = Pipe.TYPE_HOVER_HARD;
+
+        const topHover = PipePool.get("MovingPipe");
+        topHover.setAttribute(x, y, topHoverHeight, type, true);
+
+        const bottomHoverHeight = Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - GameElementLayer.VERTICAL_INTERVAL;
+        const bottomHover = PipePool.get("MovingPipe");
+        bottomHover.setAttribute(
+            x,
+            y + topHoverHeight + GameElementLayer.VERTICAL_INTERVAL,
+            bottomHoverHeight,
+            type,
+            true
+        );
+
+        this.pipes.push(topHover);
+        this.pipes.push(bottomHover);
+    }
+
+    private addMovingNormalPipe(lastPipe: Pipe) {
+        const topHeight = GameUtil.getRandomNumber(GameElementLayer.MIN_HEIGHT, GameElementLayer.MAX_HEIGHT + 1);
+        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+
+        const top = PipePool.get("MovingPipe");
+        top.setAttribute(
+            x,
+            -Constant.TOP_PIPE_LENGTHENING,
+            topHeight + Constant.TOP_PIPE_LENGTHENING,
+            Pipe.TYPE_TOP_HARD,
+            true
+        );
+
+        const bottom = PipePool.get("MovingPipe");
+        bottom.setAttribute(
+            x,
+            topHeight + GameElementLayer.VERTICAL_INTERVAL,
+            Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+            Pipe.TYPE_BOTTOM_HARD,
+            true
+        );
+
+        this.pipes.push(top);
+        this.pipes.push(bottom);
+    }
+
+    public isCollideBird(bird: Bird) {
+        if (bird.isDead()) {
+            return;
+        }
+        
+        for (const pipe of this.pipes) {
+            // 在 Cocos Creator 中，碰撞检测使用 Collider 组件进行处理
+            // 这里我们保持原有的矩形碰撞检测逻辑，但可以考虑使用 Cocos 的碰撞系统
+            if (pipe.getPipeRect().intersects(bird.getBirdCollisionRect())) {
+                bird.deadBirdFall();
+                return;
+            }
+        }
+    }
+
+    public reset() {
+        for (const pipe of this.pipes) {
+            PipePool.giveBack(pipe);
+        }
         this.pipes = [];
     }
 }

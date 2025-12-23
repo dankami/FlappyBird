@@ -1,43 +1,43 @@
-// WelcomeAnimation.ts
-import { _decorator, Component, Node, Vec3, Label } from 'cc';
+import { _decorator, Component, SpriteFrame, Graphics } from 'cc';
+import { Constant } from '../util/Constant';
+import { GameUtil } from '../util/GameUtil';
 const { ccclass, property } = _decorator;
 
 @ccclass('WelcomeAnimation')
 export class WelcomeAnimation extends Component {
-    @property({ type: Label })
-    public titleLabel: Label = null!;
+    private titleImg: SpriteFrame | null = null;
+    private noticeImg: SpriteFrame | null = null;
+    private flashCount: number = 0;
 
-    @property({ type: Label })
-    public instructionLabel: Label = null!;
-
-    @property
-    public animationDuration: number = 1;
-
-    private isAnimating: boolean = false;
-
-    start() {}
-
-    show() {
-        if (this.titleLabel) {
-            this.titleLabel.string = 'Flappy Bird';
-        }
-
-        if (this.instructionLabel) {
-            this.instructionLabel.string = 'Tap to fly!';
-        }
-
-        this.isAnimating = true;
-        this.animate();
+    constructor() {
+        super();
     }
 
-    animate() {
-        // 实现欢迎动画效果
-        this.node.setScale(new Vec3(0.8, 0.8, 1));
+    async init() {
+        this.titleImg = await GameUtil.loadBufferedImage(Constant.TITLE_IMG_PATH);
+        this.noticeImg = await GameUtil.loadBufferedImage(Constant.NOTICE_IMG_PATH);
+    }
 
-        // 使用 Cocos Creator 的动画系统或自定义动画
-        setTimeout(() => {
-            this.node.setScale(new Vec3(1, 1, 1));
-            this.isAnimating = false;
-        }, 500);
+    async draw(g: Graphics) {
+        if (!this.titleImg || !this.noticeImg) {
+            await this.init();
+        }
+
+        if (!this.titleImg || !this.noticeImg) return;
+
+        const x = Math.floor((Constant.FRAME_WIDTH - this.titleImg.width) / 2);
+        const y = Math.floor(Constant.FRAME_HEIGHT / 3);
+        g.drawImage(this.titleImg, x, y);
+
+        const CYCLE = 30;
+        this.flashCount++;
+        if (this.flashCount > CYCLE) {
+            const noticeX = Math.floor((Constant.FRAME_WIDTH - this.noticeImg.width) / 2);
+            const noticeY = Math.floor((Constant.FRAME_HEIGHT / 5) * 3);
+            g.drawImage(this.noticeImg, noticeX, noticeY);
+        }
+        if (this.flashCount === CYCLE * 2) {
+            this.flashCount = 0;
+        }
     }
 }
