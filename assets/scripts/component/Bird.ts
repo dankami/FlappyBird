@@ -8,6 +8,7 @@ import {
     PhysicsSystem,
     director,
     SpriteFrame,
+    Rect,
 } from 'cc';
 import { Constant } from '../util/Constant';
 import { GameUtil } from '../util/GameUtil';
@@ -202,4 +203,24 @@ export class Bird extends Component {
         return this.node.position;
     }
 
+    getBirdX(): number {
+        return this.x;
+    }
+
+    getBirdCollisionRect(): Rect {
+        // 创建一个矩形对象来表示小鸟的碰撞区域
+        // 基于小鸟的位置和尺寸创建碰撞矩形
+        const rectX = this.x - Bird.BIRD_WIDTH / 2;
+        const rectY = this.y - Bird.BIRD_HEIGHT / 2;
+        const rectWidth = Bird.BIRD_WIDTH - Bird.RECT_DESCALE * 3;
+        const rectHeight = Bird.BIRD_WIDTH - Bird.RECT_DESCALE * 4;
+
+        // 返回 Cocos Creator 的 Rect 对象
+        return new Rect(
+            rectX + Bird.RECT_DESCALE,
+            rectY + Bird.RECT_DESCALE * 2,
+            rectWidth,
+            rectHeight
+        );
+    }
 }

@@ -15,12 +15,12 @@ export class PipePool extends Component {
     static async init() {
         for (let i = 0; i < PipePool.FULL_PIPE; i++) {
             const pipe = new Pipe();
-            await Pipe.initImgs();
+            await pipe.initImgs(); // 修改：从 Pipe.initImgs() 改为 pipe.initImgs()
             PipePool.pool.push(pipe);
         }
         for (let i = 0; i < PipePool.FULL_PIPE; i++) {
             const movingPipe = new MovingPipe();
-            await Pipe.initImgs();
+            await movingPipe.initImgs(); // 修改：从 Pipe.initImgs() 改为 movingPipe.initImgs()
             PipePool.movingPool.push(movingPipe);
         }
     }
@@ -32,7 +32,7 @@ export class PipePool extends Component {
                 return PipePool.pool.pop()!;
             } else {
                 const pipe = new Pipe();
-                await Pipe.initImgs();
+                await pipe.initImgs(); // 修改：从 Pipe.initImgs() 改为 pipe.initImgs()
                 return pipe;
             }
         } else {
@@ -41,7 +41,7 @@ export class PipePool extends Component {
                 return PipePool.movingPool.pop()!;
             } else {
                 const movingPipe = new MovingPipe();
-                await Pipe.initImgs();
+                await movingPipe.initImgs(); // 修改：从 Pipe.initImgs() 改为 movingPipe.initImgs()
                 return movingPipe;
             }
         }

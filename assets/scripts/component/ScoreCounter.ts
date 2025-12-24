@@ -3,11 +3,10 @@ import { Constant } from '../util/Constant';
 import { MusicUtil } from '../util/MusicUtil';
 import { Bird } from './Bird';
 const { ccclass, property } = _decorator;
-
 @ccclass('ScoreCounter')
-export class ScoreCounter extends Component {
+export class ScoreCounter {
     private static instance: ScoreCounter | null = null;
-    private score: number = 0;
+    private currentScore: number = 0;
     private bestScore: number = -1;
 
     public static getInstance(): ScoreCounter {
@@ -39,7 +38,7 @@ export class ScoreCounter extends Component {
     public score(bird: Bird) {
         if (!bird.isDead()) {
             MusicUtil.playScore();
-            this.score += 1;
+            this.currentScore += 1;
         }
     }
 
@@ -48,10 +47,10 @@ export class ScoreCounter extends Component {
     }
 
     public getCurrentScore(): number {
-        return this.score;
+        return this.currentScore;
     }
 
     public reset() {
-        this.score = 0;
+        this.currentScore = 0;
     }
 }

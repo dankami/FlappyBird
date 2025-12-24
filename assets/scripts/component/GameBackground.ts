@@ -1,6 +1,5 @@
 import { _decorator, Component, Sprite, SpriteFrame, Node, Graphics, Color, Vec2, resources } from 'cc';
 import { Constant } from '../util/Constant';
-import { GameUtil } from '../util/GameUtil';
 import { Bird } from './Bird';
 const { ccclass, property } = _decorator;
 
@@ -14,8 +13,12 @@ export class GameBackground extends Component {
     private backgroundSprites: Node[] = [];
     private birdRef: Bird | null = null;
 
-    public  get GROUND_HEIGHT(): number {
-        return this.groundHeight;
+    // 添加静态属性用于存储地面高度
+    private static staticGroundHeight: number = 0;
+    
+    // 提供静态方法获取地面高度
+    public static get GROUND_HEIGHT(): number {
+        return GameBackground.staticGroundHeight;
     }
 
     start() {
@@ -28,6 +31,7 @@ export class GameBackground extends Component {
         if (this.backgroundSpriteFrame) {
             // 如果已经通过属性检查器设置了 SpriteFrame，直接使用
             this.groundHeight = this.backgroundSpriteFrame.height / 2;
+            GameBackground.staticGroundHeight = this.groundHeight; // 设置静态地面高度
             this.createBackgroundSprites();
         } else {
             // 从 resources 加载图片
@@ -39,6 +43,7 @@ export class GameBackground extends Component {
                 
                 this.backgroundSpriteFrame = spriteFrame;
                 this.groundHeight = spriteFrame.height / 2;
+                GameBackground.staticGroundHeight = this.groundHeight; // 设置静态地面高度
                 this.createBackgroundSprites();
             });
         }
@@ -94,5 +99,10 @@ export class GameBackground extends Component {
             const targetX = imgWidth * i - this.layerX;
             bgSprite.setPosition(targetX, bgSprite.position.y);
         }
+    }
+    
+    // 实例方法仍然保留，以保持向后兼容性
+    public get GROUND_HEIGHT_INSTANCE(): number {
+        return this.groundHeight;
     }
 }
