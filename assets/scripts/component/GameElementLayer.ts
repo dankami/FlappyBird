@@ -3,7 +3,6 @@ import { Constant } from '../util/Constant';
 import { GameUtil } from '../util/GameUtil';
 import { Pipe } from './Pipe';
 import { Bird } from './Bird';
-import { MovingPipe } from './MovingPipe';
 import { PipePool } from './PipePool';
 import { ScoreCounter } from './ScoreCounter';
 const { ccclass, property } = _decorator;
@@ -11,11 +10,6 @@ const { ccclass, property } = _decorator;
 @ccclass('GameElementLayer')
 export class GameElementLayer extends Component {
     private pipes: Pipe[] = [];
-
-    public static readonly VERTICAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 5);
-    public static readonly HORIZONTAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 4);
-    public static readonly MIN_HEIGHT: number = Math.floor(Constant.FRAME_HEIGHT / 8);
-    public static readonly MAX_HEIGHT: number = Math.floor((Constant.FRAME_HEIGHT / 8) * 5);
 
     constructor() {
         super();
@@ -40,11 +34,14 @@ export class GameElementLayer extends Component {
         if (bird.isDead()) {
             return;
         }
-        
-        if (this.pipes.length === 0) {
-            const topHeight = GameUtil.getRandomNumber(GameElementLayer.MIN_HEIGHT, GameElementLayer.MAX_HEIGHT + 1);
 
-            const top = await PipePool.get("Pipe");
+        if (this.pipes.length === 0) {
+            const topHeight = GameUtil.getRandomNumber(
+                Constant.MIN_HEIGHT,
+                Constant.MAX_HEIGHT + 1
+            );
+
+            const top = await PipePool.get('Pipe');
             top.setAttribute(
                 Constant.FRAME_WIDTH,
                 -Constant.TOP_PIPE_LENGTHENING,
@@ -53,11 +50,11 @@ export class GameElementLayer extends Component {
                 true
             );
 
-            const bottom = await PipePool.get("Pipe");
+            const bottom = await PipePool.get('Pipe');
             bottom.setAttribute(
                 Constant.FRAME_WIDTH,
-                topHeight + GameElementLayer.VERTICAL_INTERVAL,
-                Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+                topHeight + Constant.VERTICAL_INTERVAL,
+                Constant.FRAME_HEIGHT - topHeight - Constant.VERTICAL_INTERVAL,
                 Pipe.TYPE_BOTTOM_NORMAL,
                 true
             );
@@ -67,16 +64,19 @@ export class GameElementLayer extends Component {
         } else {
             const lastPipe = this.pipes[this.pipes.length - 1];
             const currentDistance = lastPipe.getX() - bird.getBirdX() + Bird.BIRD_WIDTH / 2;
-            const SCORE_DISTANCE = Pipe.PIPE_WIDTH * 2 + GameElementLayer.HORIZONTAL_INTERVAL;
-            
+            const SCORE_DISTANCE = Pipe.PIPE_WIDTH * 2 + Constant.HORIZONTAL_INTERVAL;
+
             if (lastPipe.isInFrame()) {
-                if (this.pipes.length >= PipePool.FULL_PIPE - 2
-                    && currentDistance <= SCORE_DISTANCE + Math.floor(Pipe.PIPE_WIDTH * 3 / 2)) {
+                if (
+                    this.pipes.length >= PipePool.FULL_PIPE - 2 &&
+                    currentDistance <= SCORE_DISTANCE + Math.floor((Pipe.PIPE_WIDTH * 3) / 2)
+                ) {
                     ScoreCounter.getInstance().score(bird);
                 }
-                
+
                 try {
-                    const currentScore = Math.floor(ScoreCounter.getInstance().getCurrentScore()) + 1;
+                    const currentScore =
+                        Math.floor(ScoreCounter.getInstance().getCurrentScore()) + 1;
                     if (GameUtil.isInProbability(currentScore, 20)) {
                         if (GameUtil.isInProbability(1, 4)) {
                             await this.addMovingHoverPipe(lastPipe);
@@ -98,10 +98,10 @@ export class GameElementLayer extends Component {
     }
 
     private async addNormalPipe(lastPipe: Pipe) {
-        const topHeight = GameUtil.getRandomNumber(GameElementLayer.MIN_HEIGHT, GameElementLayer.MAX_HEIGHT + 1);
-        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const topHeight = GameUtil.getRandomNumber(Constant.MIN_HEIGHT, Constant.MAX_HEIGHT + 1);
+        const x = lastPipe.getX() + Constant.HORIZONTAL_INTERVAL;
 
-        const top = await PipePool.get("Pipe");
+        const top = await PipePool.get('Pipe');
         top.setAttribute(
             x,
             -Constant.TOP_PIPE_LENGTHENING,
@@ -110,11 +110,11 @@ export class GameElementLayer extends Component {
             true
         );
 
-        const bottom = await PipePool.get("Pipe");
+        const bottom = await PipePool.get('Pipe');
         bottom.setAttribute(
             x,
-            topHeight + GameElementLayer.VERTICAL_INTERVAL,
-            Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+            topHeight + Constant.VERTICAL_INTERVAL,
+            Constant.FRAME_HEIGHT - topHeight - Constant.VERTICAL_INTERVAL,
             Pipe.TYPE_BOTTOM_NORMAL,
             true
         );
@@ -128,7 +128,7 @@ export class GameElementLayer extends Component {
             Math.floor(Constant.FRAME_HEIGHT / 6),
             Math.floor(Constant.FRAME_HEIGHT / 4)
         );
-        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const x = lastPipe.getX() + Constant.HORIZONTAL_INTERVAL;
         const y = GameUtil.getRandomNumber(
             Math.floor(Constant.FRAME_HEIGHT / 12),
             Math.floor(Constant.FRAME_HEIGHT / 6)
@@ -136,14 +136,15 @@ export class GameElementLayer extends Component {
 
         const type = Pipe.TYPE_HOVER_NORMAL;
 
-        const topHover = await PipePool.get("Pipe");
+        const topHover = await PipePool.get('Pipe');
         topHover.setAttribute(x, y, topHoverHeight, type, true);
 
-        const bottomHoverHeight = Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - GameElementLayer.VERTICAL_INTERVAL;
-        const bottomHover = await PipePool.get("Pipe");
+        const bottomHoverHeight =
+            Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - Constant.VERTICAL_INTERVAL;
+        const bottomHover = await PipePool.get('Pipe');
         bottomHover.setAttribute(
             x,
-            y + topHoverHeight + GameElementLayer.VERTICAL_INTERVAL,
+            y + topHoverHeight + Constant.VERTICAL_INTERVAL,
             bottomHoverHeight,
             type,
             true
@@ -158,7 +159,7 @@ export class GameElementLayer extends Component {
             Math.floor(Constant.FRAME_HEIGHT / 6),
             Math.floor(Constant.FRAME_HEIGHT / 4)
         );
-        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const x = lastPipe.getX() + Constant.HORIZONTAL_INTERVAL;
         const y = GameUtil.getRandomNumber(
             Math.floor(Constant.FRAME_HEIGHT / 12),
             Math.floor(Constant.FRAME_HEIGHT / 6)
@@ -166,14 +167,15 @@ export class GameElementLayer extends Component {
 
         const type = Pipe.TYPE_HOVER_NORMAL;
 
-        const topHover = await PipePool.get("Pipe");
+        const topHover = await PipePool.get('Pipe');
         topHover.setAttribute(x, y, topHoverHeight, type, true);
 
-        const bottomHoverHeight = Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - GameElementLayer.VERTICAL_INTERVAL;
-        const bottomHover = await PipePool.get("Pipe");
+        const bottomHoverHeight =
+            Constant.FRAME_HEIGHT - 2 * y - topHoverHeight - Constant.VERTICAL_INTERVAL;
+        const bottomHover = await PipePool.get('Pipe');
         bottomHover.setAttribute(
             x,
-            y + topHoverHeight + GameElementLayer.VERTICAL_INTERVAL,
+            y + topHoverHeight + Constant.VERTICAL_INTERVAL,
             bottomHoverHeight,
             type,
             true
@@ -183,11 +185,8 @@ export class GameElementLayer extends Component {
         this.pipes.push(bottomHover);
     }
     private async addMovingNormalPipe(lastPipe: Pipe) {
-        const topHeight = GameUtil.getRandomNumber(
-            GameElementLayer.MIN_HEIGHT,
-            GameElementLayer.MAX_HEIGHT + 1
-        );
-        const x = lastPipe.getX() + GameElementLayer.HORIZONTAL_INTERVAL;
+        const topHeight = GameUtil.getRandomNumber(Constant.MIN_HEIGHT, Constant.MAX_HEIGHT + 1);
+        const x = lastPipe.getX() + Constant.HORIZONTAL_INTERVAL;
 
         const top = await PipePool.get('Pipe');
         top.setAttribute(
@@ -201,8 +200,8 @@ export class GameElementLayer extends Component {
         const bottom = await PipePool.get('Pipe');
         bottom.setAttribute(
             x,
-            topHeight + GameElementLayer.VERTICAL_INTERVAL,
-            Constant.FRAME_HEIGHT - topHeight - GameElementLayer.VERTICAL_INTERVAL,
+            topHeight + Constant.VERTICAL_INTERVAL,
+            Constant.FRAME_HEIGHT - topHeight - Constant.VERTICAL_INTERVAL,
             Pipe.TYPE_BOTTOM_NORMAL,
             true
         );

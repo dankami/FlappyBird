@@ -58,10 +58,17 @@ export class Constant {
     ];
 
     // 云朵图片
-    public static readonly CLOUDS_IMG_PATH: string[] = ['resources/img/cloud_0.png', 'resources/img/cloud_1.png'];
+    public static readonly CLOUDS_IMG_PATH: string[] = [
+        'resources/img/cloud_0.png',
+        'resources/img/cloud_1.png',
+    ];
 
     // 水管图片
-    public static readonly PIPE_IMG_PATH: string[] = ['resources/img/pipe.png', 'resources/img/pipe_top.png', 'resources/img/pipe_bottom.png'];
+    public static readonly PIPE_IMG_PATH: string[] = [
+        'resources/img/pipe.png',
+        'resources/img/pipe_top.png',
+        'resources/img/pipe_bottom.png',
+    ];
 
     public static readonly TITLE_IMG_PATH: string = 'resources/img/title.png';
     public static readonly NOTICE_IMG_PATH: string = 'resources/img/start.png';
@@ -114,4 +121,9 @@ export class Constant {
         style: 'bold',
         size: 24,
     };
+
+    public static readonly VERTICAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 5);
+    public static readonly HORIZONTAL_INTERVAL: number = Math.floor(Constant.FRAME_HEIGHT / 4);
+    public static readonly MIN_HEIGHT: number = Math.floor(Constant.FRAME_HEIGHT / 8);
+    public static readonly MAX_HEIGHT: number = Math.floor((Constant.FRAME_HEIGHT / 8) * 5);
 }

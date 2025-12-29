@@ -1,6 +1,5 @@
 import { _decorator, Component } from 'cc';
 import { Constant } from '../util/Constant';
-import { GameElementLayer } from './GameElementLayer';
 import { Pipe } from './Pipe';
 import { MovingPipe } from './MovingPipe';
 const { ccclass, property } = _decorator;
@@ -10,7 +9,12 @@ export class PipePool extends Component {
     private static pool: Pipe[] = [];
     private static movingPool: MovingPipe[] = [];
     public static readonly MAX_PIPE_COUNT: number = 30;
-    public static readonly FULL_PIPE: number = (Math.floor(Constant.FRAME_WIDTH / (Pipe.PIPE_HEAD_WIDTH + GameElementLayer.HORIZONTAL_INTERVAL)) + 2) * 2;
+    public static readonly FULL_PIPE: number =
+        (Math.floor(
+            Constant.FRAME_WIDTH / (Pipe.PIPE_HEAD_WIDTH + Constant.HORIZONTAL_INTERVAL)
+        ) +
+            2) *
+        2;
 
     static async init() {
         for (let i = 0; i < PipePool.FULL_PIPE; i++) {
@@ -26,7 +30,7 @@ export class PipePool extends Component {
     }
 
     public static async get(className: string): Promise<Pipe> {
-        if (className === "Pipe") {
+        if (className === 'Pipe') {
             const size = PipePool.pool.length;
             if (size > 0) {
                 return PipePool.pool.pop()!;
