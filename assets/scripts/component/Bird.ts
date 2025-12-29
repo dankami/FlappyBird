@@ -9,6 +9,7 @@ import {
     director,
     SpriteFrame,
     Rect,
+    resources
 } from 'cc';
 import { Constant } from '../util/Constant';
 import { GameUtil } from '../util/GameUtil';
@@ -55,6 +56,7 @@ export class Bird extends Component {
     private BOTTOM_BOUNDARY: number;
 
     onLoad() {
+        this.birdImages = [];
         this.counter = ScoreCounter.getInstance();
         this.gameOverAnimation = new GameOverAnimation();
 
@@ -66,26 +68,37 @@ export class Bird extends Component {
         this.BOTTOM_BOUNDARY =
             Constant.FRAME_HEIGHT - GameBackground.GROUND_HEIGHT - Bird.BIRD_HEIGHT / 2;
 
+        // 获取组件
+        this.sprite = this.node.getComponent(Sprite) || this.node.addComponent(Sprite);
+    }
+
+    async initImgs() {
         // 加载图片资源
-        this.birdImages = [];
         for (let j = 0; j < Bird.STATE_COUNT; j++) {
             this.birdImages[j] = [];
             for (let i = 0; i < Bird.IMG_COUNT; i++) {
-                // 加载精灵帧
-                // this.birdImages[j][i] = // 从资源管理器加载
+                const path = Constant.BIRDS_IMG_PATH[j][i];
+                const spriteFrame = await GameUtil.loadBufferedImage(path);
+                if (spriteFrame) {
+                    this.birdImages[j][i] = spriteFrame;
+                    
+                    // 设置静态尺寸（仅在第一次加载时设置）
+                    if (j === 0 && i === 0) {
+                        Bird.BIRD_WIDTH = spriteFrame.getRect().width;
+                        Bird.BIRD_HEIGHT = spriteFrame.getRect().height;
+                    }
+                }
             }
         }
-
-        // 获取组件
-        this.sprite = this.node.getComponent(Sprite);
+        
+        // 设置初始精灵
+        if (this.birdImages[0] && this.birdImages[0][0]) {
+            this.sprite.spriteFrame = this.birdImages[0][0];
+        }
     }
 
     start() {
-        // 初始化小鸟的宽高
-        if (this.sprite && this.sprite.spriteFrame) {
-            Bird.BIRD_WIDTH = this.sprite.spriteFrame.getRect().width;
-            Bird.BIRD_HEIGHT = this.sprite.spriteFrame.getRect().height;
-        }
+        // 小鸟初始化
     }
 
     update(deltaTime: number) {
@@ -98,7 +111,7 @@ export class Bird extends Component {
         const state_index = Math.min(this.state, Bird.BIRD_DEAD_FALL);
         const currentImageIndex = Math.floor(this.wingState / 10) % Bird.IMG_COUNT;
         if (this.birdImages[state_index] && this.birdImages[state_index][currentImageIndex]) {
-            // this.sprite.spriteFrame = this.birdImages[state_index][currentImageIndex];
+            this.sprite.spriteFrame = this.birdImages[state_index][currentImageIndex];
         }
 
         // 处理游戏结束动画

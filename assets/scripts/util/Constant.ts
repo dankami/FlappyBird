@@ -10,73 +10,69 @@ export class Constant {
     public static readonly FRAME_X: number = 600;
     public static readonly FRAME_Y: number = 100;
 
-    // 图像资源路径
-    public static readonly BG_IMG_PATH: string = 'resources/img/background.png'; // 背景图片
+    public static readonly BG_IMG_PATH: string = 'img/background/spriteFrame'; // 背景图片
 
     // 小鸟图片
     public static readonly BIRDS_IMG_PATH: string[][] = [
         [
-            'resources/img/0.png',
-            'resources/img/1.png',
-            'resources/img/2.png',
-            'resources/img/3.png',
-            'resources/img/4.png',
-            'resources/img/5.png',
-            'resources/img/6.png',
-            'resources/img/7.png',
+            'img/0/spriteFrame',
+            'img/1/spriteFrame',
+            'img/2/spriteFrame',
+            'img/3/spriteFrame',
+            'img/4/spriteFrame',
+            'img/5/spriteFrame',
+            'img/6/spriteFrame',
+            'img/7/spriteFrame',
         ],
         [
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
-            'resources/img/up.png',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
+            'img/up/spriteFrame',
         ],
         [
-            'resources/img/down_0.png',
-            'resources/img/down_1.png',
-            'resources/img/down_2.png',
-            'resources/img/down_3.png',
-            'resources/img/down_4.png',
-            'resources/img/down_5.png',
-            'resources/img/down_6.png',
-            'resources/img/down_7.png',
+            'img/down_0/spriteFrame',
+            'img/down_1/spriteFrame',
+            'img/down_2/spriteFrame',
+            'img/down_3/spriteFrame',
+            'img/down_4/spriteFrame',
+            'img/down_5/spriteFrame',
+            'img/down_6/spriteFrame',
+            'img/down_7/spriteFrame',
         ],
         [
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
-            'resources/img/dead.png',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
+            'img/dead/spriteFrame',
         ],
     ];
 
     // 云朵图片
-    public static readonly CLOUDS_IMG_PATH: string[] = [
-        'resources/img/cloud_0.png',
-        'resources/img/cloud_1.png',
-    ];
+    public static readonly CLOUDS_IMG_PATH: string[] = ['img/cloud_0/spriteFrame', 'img/cloud_1/spriteFrame'];
 
     // 水管图片
     public static readonly PIPE_IMG_PATH: string[] = [
-        'resources/img/pipe.png',
-        'resources/img/pipe_top.png',
-        'resources/img/pipe_bottom.png',
+        'img/pipe/spriteFrame',
+        'img/pipe_top/spriteFrame',
+        'img/pipe_bottom/spriteFrame',
     ];
 
-    public static readonly TITLE_IMG_PATH: string = 'resources/img/title.png';
-    public static readonly NOTICE_IMG_PATH: string = 'resources/img/start.png';
-    public static readonly SCORE_IMG_PATH: string = 'resources/img/score.png';
-    public static readonly OVER_IMG_PATH: string = 'resources/img/over.png';
-    public static readonly AGAIN_IMG_PATH: string = 'resources/img/again.png';
+    public static readonly TITLE_IMG_PATH: string = 'img/title/spriteFrame';
+    public static readonly NOTICE_IMG_PATH: string = 'img/start/spriteFrame';
+    public static readonly SCORE_IMG_PATH: string = 'img/score/spriteFrame';
+    public static readonly OVER_IMG_PATH: string = 'img/over/spriteFrame';
+    public static readonly AGAIN_IMG_PATH: string = 'img/again/spriteFrame';
 
-    public static readonly SCORE_FILE_PATH: string = 'resources/score'; // 分数文件路径
+    public static readonly SCORE_FILE_PATH: string = 'score';
 
     // 游戏速度（水管及背景层的移动速度）
     public static readonly GAME_SPEED: number = 4;

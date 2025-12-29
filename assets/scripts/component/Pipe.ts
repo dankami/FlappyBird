@@ -48,10 +48,12 @@ export class Pipe extends Component {
 
             // 设置静态属性
             if (this.imgs[0]) {
-                Pipe.PIPE_WIDTH = this.imgs[0].width;
-                Pipe.PIPE_HEIGHT = this.imgs[0].height;
-                Pipe.PIPE_HEAD_WIDTH = this.imgs[1].width;
-                Pipe.PIPE_HEAD_HEIGHT = this.imgs[1].height;
+                Pipe.PIPE_WIDTH = this.imgs[0].texture.width;
+                Pipe.PIPE_HEIGHT = this.imgs[0].texture.height;
+            }
+            if (this.imgs[1]) { // pipe top
+                Pipe.PIPE_HEAD_WIDTH = this.imgs[1].texture.width;
+                Pipe.PIPE_HEAD_HEIGHT = this.imgs[1].texture.height;
             }
         }
     }
